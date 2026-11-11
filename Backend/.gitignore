@@ -1,0 +1,20 @@
+# Build
+target/
+HELP.md
+!.mvn/wrapper/maven-wrapper.jar
+
+# Bí mật / cấu hình cục bộ – KHÔNG commit
+.env
+application-local.properties
+*firebase*.json
+*.log
+
+# IDE
+.classpath
+.factorypath
+.project
+.settings/
+.vscode/
+.idea/
+*.iml
+bin/
