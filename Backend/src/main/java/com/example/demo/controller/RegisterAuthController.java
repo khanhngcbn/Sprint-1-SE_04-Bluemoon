@@ -5,6 +5,7 @@ import com.example.demo.service.OTPService;
 import com.example.demo.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,7 +32,11 @@ public class RegisterAuthController {
             return ResponseEntity.badRequest().body(Map.of("message", "Phiên đăng ký đã hết hạn!"));
         }
 
-        otpService.sendGmailAuthentication(email);
+        try {
+            otpService.sendGmailAuthentication(email);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("message", e.getMessage()));
+        }
         return ResponseEntity.ok(Map.of("message", "OTP đã được gửi đến email của bạn."));
     }
 
@@ -68,7 +73,11 @@ public class RegisterAuthController {
             return ResponseEntity.badRequest().body(Map.of("message", "Không tìm thấy email trong session!"));
         }
 
-        otpService.sendGmailAuthentication(email);
+        try {
+            otpService.sendGmailAuthentication(email);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(Map.of("message", e.getMessage()));
+        }
         return ResponseEntity.ok(Map.of("message", "OTP đã được gửi lại!"));
     }
 }

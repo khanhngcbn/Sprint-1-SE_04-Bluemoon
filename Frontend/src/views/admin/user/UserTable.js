@@ -30,6 +30,7 @@ import {
   FiCheckSquare, 
   FiXSquare, 
   FiUserCheck, 
+  FiUserX, 
   FiTrash2, 
   FiDownload 
 } from 'react-icons/fi';
@@ -185,6 +186,68 @@ const batchActivateAccounts = async (ids, toast, refreshData, tableData) => {
       toast({
           title: 'Batch activation failed!',
           description: 'An error occurred while activating the accounts.',
+          status: 'error',
+          duration: 2000,
+          isClosable: true,
+      });
+      return false;
+  }
+};
+
+const batchDeactivateAccounts = async (ids, toast, refreshData, tableData) => {
+  try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+          console.log('Authentication failed: No token found!');
+          return false;
+      }
+
+      const filteredIds = ids.filter(id => {
+          const user = tableData.find(user => user.id === id);
+          return user && user.name !== 'admin';
+      });
+
+      if (filteredIds.length === 0) {
+          toast({
+              title: 'No valid users selected!',
+              description: 'Cannot deactivate admin account.',
+              status: 'warning',
+              duration: 2000,
+              isClosable: true,
+          });
+          return false;
+      }
+
+      const response = await axios.post(
+          `${API_BASE_URL}/api/admin/users/batch/deactivate`,
+          { ids: filteredIds },
+          {
+              headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+              },
+          },
+      );
+
+      if (response.status === 200) {
+          const { deactivatedCount = 0, failedIds = [] } = response.data || {};
+          toast({
+              title: 'Accounts deactivated!',
+              description: failedIds.length > 0
+                  ? `${deactivatedCount} accounts deactivated, ${failedIds.length} skipped (protected or not found).`
+                  : `${deactivatedCount} accounts have been successfully deactivated.`,
+              status: failedIds.length > 0 ? 'warning' : 'success',
+              duration: 3000,
+              isClosable: true,
+          });
+          refreshData();
+          return true;
+      }
+  } catch (error) {
+      console.error('Error batch deactivating accounts:', error);
+      toast({
+          title: 'Batch deactivation failed!',
+          description: 'An error occurred while deactivating the accounts.',
           status: 'error',
           duration: 2000,
           isClosable: true,
@@ -480,6 +543,11 @@ export default function ColumnTable({ tableData, columnsConfig, refreshData }) {
       onClose: onActivateModalClose,
   } = useDisclosure();
   const {
+      isOpen: isDeactivateModalOpen,
+      onOpen: onDeactivateModalOpen,
+      onClose: onDeactivateModalClose,
+  } = useDisclosure();
+  const {
       isOpen: isDeleteModalOpen,
       onOpen: onDeleteModalOpen,
       onClose: onDeleteModalClose,
@@ -771,6 +839,28 @@ export default function ColumnTable({ tableData, columnsConfig, refreshData }) {
       }
   };
 
+  const handleBatchDeactivate = async () => {
+      if (selectedRows.length === 0) {
+          toast({
+              title: 'No users selected!',
+              description: 'Please select at least one user to deactivate.',
+              status: 'warning',
+              duration: 2000,
+              isClosable: true,
+          });
+          return;
+      }
+      onDeactivateModalOpen();
+  };
+
+  const confirmBatchDeactivate = async () => {
+      const success = await batchDeactivateAccounts(selectedRows, toast, refreshData, tableData);
+      if (success) {
+          setSelectedRows([]);
+          onDeactivateModalClose();
+      }
+  };
+
   const handleBatchDelete = async () => {
       if (selectedRows.length === 0) {
           toast({
@@ -930,6 +1020,19 @@ export default function ColumnTable({ tableData, columnsConfig, refreshData }) {
                       onClick={handleBatchActivate}
                   >
                       Activate
+                  </Button>
+                  <Button
+                      leftIcon={<FiUserX />}
+                      variant="darkBrand"
+                      color="white"
+                      fontSize="sm"
+                      fontWeight="500"
+                      borderRadius="10px"
+                      px="15px"
+                      py="5px"
+                      onClick={handleBatchDeactivate}
+                  >
+                      Deactivate
                   </Button>
                   <Button
                       leftIcon={<FiTrash2 />}
@@ -1103,6 +1206,30 @@ export default function ColumnTable({ tableData, columnsConfig, refreshData }) {
                           onClick={confirmBatchActivate}
                       >
                           Activate
+                      </Button>
+                  </ModalFooter>
+              </ModalContent>
+          </Modal>
+
+          <Modal isOpen={isDeactivateModalOpen} onClose={onDeactivateModalClose}>
+              <ModalOverlay />
+              <ModalContent>
+                  <ModalHeader>Confirm Deactivation</ModalHeader>
+                  <ModalCloseButton />
+                  <ModalBody>
+                      Are you sure you want to deactivate {selectedRows.length} users?
+                      Deactivated accounts cannot sign in and are removed from their apartments.
+                  </ModalBody>
+                  <ModalFooter>
+                      <Button variant="ghost" mr={3} onClick={onDeactivateModalClose}>
+                          Cancel
+                      </Button>
+                      <Button
+                          bg="gray.700"
+                          color="white"
+                          onClick={confirmBatchDeactivate}
+                      >
+                          Deactivate
                       </Button>
                   </ModalFooter>
               </ModalContent>

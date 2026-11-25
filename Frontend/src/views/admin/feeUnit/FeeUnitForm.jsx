@@ -32,7 +32,9 @@ const FeeUnitForm = () => {
     apartmentPricePerM2: 0,
     serviceFeePerM2: 0,
     waterFeePerM3: 0,
-    electricityFeePerKWh: 0
+    electricityFeePerKWh: 0,
+    parkingFeePerMonth: 0,
+    parkingFeePerHour: 0
   });
 
   useEffect(() => {
@@ -212,6 +214,40 @@ const FeeUnitForm = () => {
                     <InputGroup>
                     <NumberInputField />
                     <InputRightAddon>VND/kWh</InputRightAddon>
+                  </InputGroup>
+                </NumberInput>
+              </FormControl>
+            </SimpleGrid>
+
+            <Text color={textColor} fontSize='xl' fontWeight='600' mb={4} bg="blue.50" p={2} borderRadius="md">
+              Parking Fee Settings
+            </Text>
+
+            <SimpleGrid columns={{ base: 1, md: 2 }} spacing='20px' mb={6}>
+              <FormControl>
+                <FormLabel>Monthly Parking (VND/month)</FormLabel>
+                <NumberInput
+                    min={0}
+                    value={feeUnit.parkingFeePerMonth || 0}
+                    onChange={(valueStr, valueNum) => handleInputChange('parkingFeePerMonth', valueNum)}
+                >
+                    <InputGroup>
+                    <NumberInputField />
+                    <InputRightAddon>VND/month</InputRightAddon>
+                  </InputGroup>
+                </NumberInput>
+              </FormControl>
+
+              <FormControl>
+                <FormLabel>Hourly Parking (VND/hour)</FormLabel>
+                <NumberInput
+                    min={0}
+                    value={feeUnit.parkingFeePerHour || 0}
+                    onChange={(valueStr, valueNum) => handleInputChange('parkingFeePerHour', valueNum)}
+                >
+                    <InputGroup>
+                    <NumberInputField />
+                    <InputRightAddon>VND/hour</InputRightAddon>
                   </InputGroup>
                 </NumberInput>
               </FormControl>

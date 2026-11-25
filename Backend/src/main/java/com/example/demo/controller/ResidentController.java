@@ -12,6 +12,7 @@ import com.example.demo.service.ApartmentService;
 import com.example.demo.service.ResidentService;
 import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/residents")
+@PreAuthorize("hasAuthority('ROLE_ADMIN')") // dữ liệu cư dân (email, SĐT) chỉ dành cho Ban quản lý
 public class ResidentController {
 
 //    @Autowired

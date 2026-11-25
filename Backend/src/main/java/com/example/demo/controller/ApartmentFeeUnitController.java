@@ -27,10 +27,22 @@ public class ApartmentFeeUnitController {
 
     @PostMapping
     public ResponseEntity<?> saveFeeUnit(@RequestBody ApartmentFeeUnit feeUnit) {
-        if (feeUnit.getApartmentPricePerM2() < 0 ||
-            feeUnit.getServiceFeePerM2() < 0 ||
-            feeUnit.getWaterFeePerM3() < 0 ||
-            feeUnit.getElectricityFeePerKWh() < 0) {
+        if (feeUnit.getApartmentPricePerM2() == null ||
+            feeUnit.getServiceFeePerM2() == null ||
+            feeUnit.getWaterFeePerM3() == null ||
+            feeUnit.getElectricityFeePerKWh() == null) {
+
+            Map<String, String> error = new HashMap<>();
+            error.put("message", "Vui lòng nhập đầy đủ đơn giá phí căn hộ, dịch vụ, điện và nước!");
+            return ResponseEntity.badRequest().body(error);
+        }
+
+        if (isNegative(feeUnit.getApartmentPricePerM2()) ||
+            isNegative(feeUnit.getServiceFeePerM2()) ||
+            isNegative(feeUnit.getWaterFeePerM3()) ||
+            isNegative(feeUnit.getElectricityFeePerKWh()) ||
+            isNegative(feeUnit.getParkingFeePerMonth()) ||
+            isNegative(feeUnit.getParkingFeePerHour())) {
 
             Map<String, String> error = new HashMap<>();
             error.put("message", "Giá trị phí không thể là số âm!");
@@ -45,5 +57,9 @@ public class ApartmentFeeUnitController {
         response.put("status", "success");
 
         return ResponseEntity.ok(savedFeeUnit);
+    }
+
+    private static boolean isNegative(Long value) {
+        return value != null && value < 0;
     }
 } 

@@ -201,6 +201,13 @@ function SignIn() {
         isClosable: true,
       });
       setOtpTimer(240);
+    } else if (resendData.message) {
+      toast({
+        title: resendData.message,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 

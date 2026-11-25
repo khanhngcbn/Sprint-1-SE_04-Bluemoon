@@ -23,4 +23,12 @@ public class ApartmentFeeUnit {
     private Long waterFeePerM3;
     @Column(name = "electricity_fee_per_kwh", nullable = false)
     private Long electricityFeePerKWh;
+
+    // Đơn giá gửi xe (US05). Cho phép null để Hibernate thêm cột vào bảng đã có dữ liệu;
+    // ApartmentFeeUnitService đổi null thành 0.
+    @Column(name = "parking_fee_per_month")
+    private Long parkingFeePerMonth;
+
+    @Column(name = "parking_fee_per_hour")
+    private Long parkingFeePerHour;
 }

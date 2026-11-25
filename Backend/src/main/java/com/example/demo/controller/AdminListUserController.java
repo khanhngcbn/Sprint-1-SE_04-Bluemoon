@@ -246,4 +246,54 @@ public class AdminListUserController {
         result.put("failedIds", failed);
         return ResponseEntity.ok(result);
     }
+
+    /**
+     * Vô hiệu hóa nhiều tài khoản cùng lúc (US23). Áp dụng cùng quy tắc với vô hiệu hóa đơn lẻ:
+     * gỡ cư dân khỏi căn hộ rồi khóa tài khoản. Không cho khóa chính mình, và chỉ super admin
+     * mới khóa được tài khoản ADMIN khác.
+     */
+    @PostMapping("/batch/deactivate")
+    public ResponseEntity<Map<String, Object>> batchDeactivate(@RequestBody Map<String, List<Long>> payload) {
+        List<Long> ids = payload.get("ids");
+        Map<String, Object> result = new HashMap<>();
+
+        if (ids == null || ids.isEmpty()) {
+            result.put("success", false);
+            result.put("message", "No users selected");
+            return ResponseEntity.badRequest().body(result);
+        }
+
+        User currentUser = getCurrentUser();
+        boolean isSuperAdmin = isCurrentUserSuperAdmin();
+        int count = 0;
+        List<Long> failed = new ArrayList<>();
+
+        for (Long id : ids) {
+            try {
+                User user = userService.findById(id);
+                boolean protectedAccount = user == null
+                        || user.getId().equals(currentUser.getId())
+                        || "admin".equals(user.getName())
+                        || ("ADMIN".equals(user.getRole()) && !isSuperAdmin);
+                if (protectedAccount) {
+                    failed.add(id);
+                    continue;
+                }
+                Resident resident = user.getResidentId() == null ? null : residentService.findById(user.getResidentId());
+                if (resident != null) apartmentService.deleteResident(resident);
+                if (userService.deactivateUser(id)) {
+                    count++;
+                } else {
+                    failed.add(id);
+                }
+            } catch (Exception e) {
+                failed.add(id);
+            }
+        }
+
+        result.put("success", count > 0);
+        result.put("deactivatedCount", count);
+        result.put("failedIds", failed);
+        return ResponseEntity.ok(result);
+    }
 }
